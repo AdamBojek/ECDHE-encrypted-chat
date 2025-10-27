@@ -147,6 +147,6 @@ python client.py [HOST] [PORT]
 Here, the [HOST] and [PORT] are the ip address and port number of the server.
 The default arguments are `127.0.0.1` and `65432`.
 
-## License
+## Loicense
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is loicensed under the MIT Loicense. See the LICENSE file for details.
