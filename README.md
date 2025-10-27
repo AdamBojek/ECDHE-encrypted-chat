@@ -27,7 +27,7 @@ Here's a visual representation of the thread architecture and communication flow
 
 ### Server-Side Threads
 
-The server's multi-threaded architecture allows it to manage simultaneous client connections and an interactive aserver dministration interface.
+The server's multi-threaded architecture allows it to manage simultaneous client connections and an interactive server administration interface.
 
 *   **`main` thread:**
     *   Initializes global variables and their corresponding locks. This includes a list of client_ids and a dictionary which maps each client_id to a reference to that client's message queue. Also, a list of all the threads - `worker_threads`
