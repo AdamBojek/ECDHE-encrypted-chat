@@ -11,7 +11,7 @@ This project implements a secure client-server console-based chat app. It uses E
 *   **Authenticated Encryption:** Uses Fernet which handles the encryption and data integrity, making sure the message hasn't been tampered with.
 *   **Multi-threaded Server:** Capable of handling multiple clients at the same time.
 *   **Two-way Communication:** Duplex communication between the server and its clients.
-*   **Graceful Shutdown:** Ensures all the threads close properly and frees up used resurces. After a client disconnects a cleanup procedure makes sure to delete them from memory.
+*   **Graceful Shutdown:** Ensures all the threads close properly and frees up used resources. After a client disconnects a cleanup procedure makes sure to delete them from memory.
 *   **Disconnection Handling:** Detects and responds to both graceful and abrupt client/server disconnections (via error handling).
 *   **Command-Line Interface:** Simple server administration interface to manage clients and send messages.
 *   **Error handling:** If an error occurs while communicating with a specific client, the error is contained and handled in that client's thread. Just because there is an issue with one of the client, doesn't mean that the server needs to shut down.
