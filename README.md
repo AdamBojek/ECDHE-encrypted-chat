@@ -23,7 +23,7 @@ Both the server and the client implement multithreading, though to different deg
 
 Here's a visual representation of the thread architecture and communication flow:
 
-![Thread Architecture Diagram](threads_diagram.drawio.png)
+![Thread Architecture Diagram](threads_diagram.png)
 
 ### Server-Side Threads
 
