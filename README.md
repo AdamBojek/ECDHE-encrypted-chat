@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project implements a secure client-server console-based chat app. It uses ECDHE to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global varaible locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acqusition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary. The error handling ensure that if an error occurs while communicating with a specific client, the error is contained and handled in that client's thread. Just because there is an issue with one of the client, doesn't mean that the server needs to shut down.
+This project implements a secure client-server console-based chat app. It uses ECDHE to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global variable locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acqusition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary.
 
 ## Features
 
@@ -14,10 +14,11 @@ This project implements a secure client-server console-based chat app. It uses E
 *   **Graceful Shutdown:** Ensures all the threads close properly and frees up used resurces. After a client disconnects a cleanup procedure makes sure to delete them from memory.
 *   **Disconnection Handling:** Detects and responds to both graceful and abrupt client/server disconnections (via error handling).
 *   **Command-Line Interface:** Simple server administration interface to manage clients and send messages.
+*   **Error handling:** If an error occurs while communicating with a specific client, the error is contained and handled in that client's thread. Just because there is an issue with one of the client, doesn't mean that the server needs to shut down.
 
 ## Architecture
 
-Both the server and the client implement multithreading, though to a different degree.
+Both the server and the client implement multithreading, though to different degrees.
 
 Here's a visual representation of the thread architecture and communication flow:
 
@@ -25,7 +26,7 @@ Here's a visual representation of the thread architecture and communication flow
 
 ### Server-Side Threads
 
-The server's multi-threaded architecture allows it to manage simultaneous client connections and an interactive administration interface.
+The server's multi-threaded architecture allows it to manage simultaneous client connections and an interactive aserver dministration interface.
 
 *   **`main` thread:**
     *   Initializes global variables and their corresponding locks. This includes a list of client_ids and a dictionary which maps each client_id to a reference to that client's message queue. Also, a list of all the threads - `worker_threads`
