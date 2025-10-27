@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project implements a secure client-server console-based chat app. It uses ECDHE (elliptic curve Diffie-Hellman ephemeral) to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global variable locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acqusition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary.
+This project implements a secure client-server console-based chat app. It uses ECDHE (elliptic curve Diffie-Hellman ephemeral) to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global variable locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acquisition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary.
 
 ## Features
 
@@ -56,7 +56,7 @@ The server's multi-threaded architecture allows it to manage simultaneous client
 
 *   **`handle_client` thread (per client):**
     *   This thread acts as a manager for a single client's session.
-    *   It contains a `try...except...finally` block that covers the entire lifecycle of the client's connection.
+    *   It contains a `try...except...finally` block that covers the entire life cycle of the client's connection.
     *   Generates ECDHE keys and performs the ECDHE handshake with the client.
     *   Derives the key using the `HKDF()` key derivation function (which itself uses the SHA256() algorithm). This derived key is used to initialize Fernet.
     *   Sets `conn.settimeout(0.5)` on the client's socket which is very important to make sure the program doesn't get stuck waiting in one spot.
@@ -133,7 +133,7 @@ To start the server:
 python server.py [HOST] [PORT]
 ```
 
-The arguments are the ip address and the port number on which the server will listen.
+The arguments are the IP address and the port number on which the server will listen.
 The default arguments are `127.0.0.1` and `65432`.
 
 #### Running the client
@@ -144,7 +144,7 @@ The syntax is the same as for the server
 python client.py [HOST] [PORT]
 ```
 
-Here, the [HOST] and [PORT] are the ip address and port number of the server.
+Here, the [HOST] and [PORT] are the IP address and port number of the server.
 The default arguments are `127.0.0.1` and `65432`.
 
 ## Loicense
