@@ -129,7 +129,7 @@ The client's thread architecture is much simpler, only consisting of 2 sub-threa
 
 To start the server:
 
-```bash
+```
 python server.py [HOST] [PORT]
 ```
 
@@ -140,7 +140,7 @@ The default arguments are `127.0.0.1` and `65432`.
 
 The syntax is the same as for the server
 
-```bash
+```
 python client.py [HOST] [PORT]
 ```
 
