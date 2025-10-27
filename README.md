@@ -119,7 +119,7 @@ The client's thread architecture is much simpler, only consisting of 2 sub-threa
 ### Installation
 
 **Clone the repository:**
-    ```bash
+    ```
     git clone https://github.com/AdamBojek/ECDHE-encrypted-chat.git
     ```
 
