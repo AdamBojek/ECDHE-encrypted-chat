@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project implements a secure client-server console-based chat app. It uses ECDHE to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global variable locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acqusition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary.
+This project implements a secure client-server console-based chat app. It uses ECDHE (elliptic curve Diffie-Hellman ephemeral) to establish a shared key, and Fernet for encrypted communication. The server is designed to handle multiple concurrent clients, thanks to multithreading. Multithreading also allows for two-way communication. Great care was taken to ensure the multithreading implementation is secure. This is achieved via global variable locks, which ensure two threads cannot modify the same variable at the same time. We avoid deadlocks by establishing a global lock acqusition order. All the threads should close properly (graceful shutdown) so the daemon parameter is unnecessary.
 
 ## Features
 
