@@ -15,6 +15,7 @@ This project implements a secure client-server console-based chat app. It uses E
 *   **Disconnection Handling:** Detects and responds to both graceful and abrupt client/server disconnections (via error handling).
 *   **Command-Line Interface:** Simple server administration interface to manage clients and send messages.
 *   **Error handling:** If an error occurs while communicating with a specific client, the error is contained and handled in that client's thread. Just because there is an issue with one of the client, doesn't mean that the server needs to shut down.
+*   **Inter-thread communication:** We use two main ways of communicating between different threads. Global and local events, as well as queues.
 
 ## Architecture
 
