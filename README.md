@@ -87,7 +87,7 @@ The client's thread architecture is much simpler, only consisting of 2 sub-threa
     *   Parses command-line arguments (HOST, PORT).
     *   Establishes the initial socket connection (`s.connect()`) to the server.
     *   Performs the ECDHE handshake to establish a shared secret key.
-    *   Derives the key using HKDF(), and iniializes Fernet. Same as the server script.
+    *   Derives the key using HKDF(), and initializes Fernet. Same as the server script.
     *   Sets the timeout on the client's socket (for the same reasons as the server)
     *   Creates a `disconnect_event` (local to the client's session) to signal disconnections between its `sender` and `receiver` sub-threads.
     *   Creates `sender_thread` (client-side) and `receiver_thread` (client-side).
