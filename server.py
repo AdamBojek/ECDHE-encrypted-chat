@@ -336,8 +336,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, exiting...")
         server_shutdown_event.set()
-    except Exception as e:
-        print("An error occured while joining the threads.")
+    except Exception as e:  
+        print("A critical error occured in the server script.")
         print(e)
         server_shutdown_event.set()
     finally:
