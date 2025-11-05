@@ -114,7 +114,7 @@ The client's thread architecture is much simpler, only consisting of 2 sub-threa
 ### Prerequisites
 
 *   Python 3.8+
-*   `cryptography` library
+*   everything listed in `requirements.txt`
 
 ### Installation
 
