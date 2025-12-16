@@ -2,8 +2,8 @@
 
 from cryptography.hazmat.primitives.asymmetric import ec #ellipic curves
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF #used for key derivation
-from cryptography.hazmat.primitives import hashes
-from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes #hash function for HKDF
+from cryptography.fernet import Fernet #symmetric encryption
 from cryptography.hazmat.primitives import serialization
 import os
 import base64
@@ -37,7 +37,7 @@ def client_cleanup(client_id, conn):
                     client_message_queues.pop(client_id)
                 if client_id in active_client_ids:
                     active_client_ids.remove(client_id)
-        #might be redundant, should have already close, probably ok just in case
+        #might be redundant, should have already closed, probably ok just in case
         conn.close()
         print(f"Connection with {client_id} closed.")
         return 0
@@ -105,7 +105,7 @@ def receiver_thread(conn : socket, client_id, server_fernet : Fernet, client_dis
     try:
         while not server_shutdown_event.is_set() and conn.fileno() != -1 and not client_disconnect_event.is_set(): #fileno returns -1 if the socket is closed
             try:
-                # get raw messaage length
+                # get raw message length
                 raw_msglen = recvall(conn, 4)
                 
                 if raw_msglen is None:
@@ -169,6 +169,7 @@ def handle_client(conn : socket, addr, client_id):
                         encoding=serialization.Encoding.PEM,
                     ))
                     #4. wait for acknowledgment from the client
+                    #this is completely unnecessary, TCP already does this
                     ack = conn.recv(1024)
                     if not ack == b"ACK":
                         return 1 #exit if no acknowledgment
@@ -242,7 +243,7 @@ def print_client_ids():
     print("Here's the current list of clients:")
     #we create a copy of the list to avoid issues with threading
     with active_client_ids_lock:
-        active_client_ids_copy = active_client_ids.copy() #no need for deep copy
+        active_client_ids_copy = active_client_ids.copy()
     for i in range(0, len(active_client_ids_copy)):
         print(f"{i}. {active_client_ids_copy[i]}")
     if len(active_client_ids_copy) == 0:
@@ -354,6 +355,8 @@ if __name__ == "__main__":
     active_client_ids = [] #client ID is simply the address tuple (ip, port), should be unique hopefully
 
     #create and start the server management interface thread
+    #IMPORTANT: server_management_interface is a daemon because it handles user input
+    #if it wasnt a daemon, the thread would be blocked, waiting for input, which would cause issues when joining
     new_management_thread = threading.Thread(target=server_management_interface, daemon=True)
     with worker_threads_lock:
         worker_threads.append(new_management_thread)
