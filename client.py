@@ -1,4 +1,4 @@
-#! C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\python3.11.exe
+#!/usr/bin/python
 
 from cryptography.hazmat.primitives.asymmetric import ec #ellipic curves
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF #used for key derivation   
@@ -9,13 +9,42 @@ import socket
 import base64
 import sys
 import threading
+import struct
+
+def recvall(sock, n):
+    # helper function to receive EXACTLY n bytes. recv() is not guaranteed to return exactly n bytes.abs
+    # Returns None if EOF is hit
+    data = b''
+    while len(data) < n:
+        try:
+            packet = sock.recv(n - len(data))
+            if not packet:
+                return None
+            data += packet
+        except socket.timeout:
+            #pass the exception to the caller
+            raise 
+    return data
 
 def receiver_thread(s : socket, client_fernet : Fernet, disconnect_event : threading.Event):
     while not disconnect_event.is_set():
         try:
-            token = s.recv(1024)
-            if not token: #or token == b""
+            # get the raw message length (bytes)
+            raw_msglen = recvall(s, 4)
+            
+            if raw_msglen is None:
                 print("Connection closed by the server.")
+                disconnect_event.set()
+                break
+            
+            # get the actual message length
+            # !I means Unsigned int, big endian
+            msglen = struct.unpack('!I', raw_msglen)[0]
+
+            # get the message
+            token = recvall(s, msglen)
+            if token is None:
+                print("Connection closed during message body reception.")
                 disconnect_event.set()
                 break
         except socket.timeout:
@@ -24,7 +53,7 @@ def receiver_thread(s : socket, client_fernet : Fernet, disconnect_event : threa
             disconnect_event.set()
             break
         try:
-            print(client_fernet.decrypt(token).decode()) #allows colors in the terminal
+            print(client_fernet.decrypt(token).decode()) 
         except InvalidToken as e:
             print("Invalid token received, maybe the keys dont match?")
             print(e)
@@ -55,7 +84,13 @@ def sender_thread(s : socket, client_fernet : Fernet, disconnect_event : threadi
                     token = client_fernet.encrypt(message[1:].encode()) #edge case
                 else:
                     token = client_fernet.encrypt(message.encode())
-                s.sendall(token)
+                
+                # ! - Big Endian
+                # I - unsigned int
+                # Converts the length of the token to a 4 byte integer (big endian)
+                length_prefix = struct.pack('!I', len(token))
+                # add the prefix to the token and send it
+                s.sendall(length_prefix + token)
         except KeyboardInterrupt:
             print("KeyboardInterrupt detected, exiting...")
             disconnect_event.set()
@@ -71,9 +106,9 @@ if __name__ == "__main__":
         HOST = sys.argv[1]
         PORT = int(sys.argv[2])
     else:
-        #set to default values
-        HOST = "127.0.0.1"
-        PORT = 65432
+        print("USAGE: client.py [HOST] [PORT]")
+        print("Where HOST is the IP address of the server and PORT is the port number.")
+        sys.exit(1)
 
     client_private_key = ec.generate_private_key(ec.SECP384R1())
     client_public_key = client_private_key.public_key()
@@ -134,8 +169,8 @@ if __name__ == "__main__":
 
         s.settimeout(0.5)
 
-        new_sender_thread = threading.Thread(target=sender_thread, args=(s, client_fernet, disconnect_event))
-        new_receiver_thread = threading.Thread(target=receiver_thread, args=(s, client_fernet, disconnect_event))
+        new_sender_thread = threading.Thread(target=sender_thread, daemon=True,args=(s, client_fernet, disconnect_event))
+        new_receiver_thread = threading.Thread(target=receiver_thread, daemon=True, args=(s, client_fernet, disconnect_event))
         worker_threads.append(new_receiver_thread)
         worker_threads.append(new_sender_thread)
 
@@ -153,8 +188,14 @@ if __name__ == "__main__":
             print(e)
             disconnect_event.set()
         finally:
-            for t in worker_threads:
-                t.join()
+            try:
+                s.close() 
+            except:
+                pass
+            
+            #the threads are daemons so we dont need to join them manually
+            pass
+            
 
         print("Disconnected from the server.")
 

@@ -109,6 +109,17 @@ The client's thread architecture is much simpler, only consisting of 2 sub-threa
     *   Decrypts incoming messages using `client_fernet` and prints them to the client console.
     *   Sets `disconnect_event` if decryption fails (`InvalidToken`) or other errors occur.
 
+## Miscellaneous
+
+* **Length-Prefixed Protocol (Handling TCP Fragmentation):** We moved away from static buffer sizes (`recv(1024)`), which are prone to errors in TCP streams (where packets can be split or merged). 
+    * The application now uses a **Length-Prefix** scheme: every encrypted message is preceded by a 4-byte header (Big-Endian Unsigned Integer) indicating the exact size of the payload.
+    * A custom `recvall()` helper function ensures the socket reads exactly the expected number of bytes before attempting decryption. This prevents `InvalidToken` errors and allows sending messages of arbitrary length.
+
+* **Non-Blocking Shutdown (Daemon Threads):**
+    To resolve issues where blocking I/O operations (specifically `input()`) prevented the application from closing, threads handling user input are now instantiated as **Daemon Threads**.
+    * This allows the main process to terminate immediately upon a `KeyboardInterrupt` (Ctrl+C) without waiting for the user to press 'Enter'.
+    * Resource cleanup (sockets, locks) is still handled safely via Context Managers (`with` statements) in the main thread.
+
 ## Getting Started
 
 ### Prerequisites

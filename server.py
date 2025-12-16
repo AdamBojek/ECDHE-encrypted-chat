@@ -1,4 +1,4 @@
-#! C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\python3.11.exe
+#!/usr/bin/python
 
 from cryptography.hazmat.primitives.asymmetric import ec #ellipic curves
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF #used for key derivation
@@ -10,7 +10,23 @@ import base64
 import socket
 import threading
 import queue
+import struct
 import sys #used for command line arguments
+
+def recvall(sock, n):
+    # helper function to receive EXACTLY n bytes. recv() is not guaranteed to return exactly n bytes.abs
+    # Returns None if EOF is hit
+    data = b''
+    while len(data) < n:
+        try:
+            packet = sock.recv(n - len(data))
+            if not packet:
+                return None
+            data += packet
+        except socket.timeout:
+            #pass the exception to the caller
+            raise 
+    return data
 
 def client_cleanup(client_id, conn):
     try:
@@ -65,7 +81,13 @@ def sender_thread(conn : socket, client_id,  server_fernet : Fernet, client_disc
                     token = server_fernet.encrypt(message[1:].encode()) #edge case
                 else:
                     token = server_fernet.encrypt(message.encode())
-                conn.sendall(token)
+
+                # ! - Big Endian
+                # I - unsigned int
+                # Converts the length of the token to a 4 byte integer (big endian)
+                length_prefix = struct.pack('!I', len(token))
+                # add the prefix to the token and send it
+                conn.sendall(length_prefix + token)
                 print(f"Message sent to {client_id}")
     except (BrokenPipeError, ConnectionResetError, OSError) as e:
         print("Client disconnected (sender_thread):")
@@ -83,11 +105,24 @@ def receiver_thread(conn : socket, client_id, server_fernet : Fernet, client_dis
     try:
         while not server_shutdown_event.is_set() and conn.fileno() != -1 and not client_disconnect_event.is_set(): #fileno returns -1 if the socket is closed
             try:
-                token = conn.recv(1024)
-                if not token:
+                # get raw messaage length
+                raw_msglen = recvall(conn, 4)
+                
+                if raw_msglen is None:
                     print("Connection closed by the client.")
                     client_disconnect_event.set()
                     break
+                
+                # get actual message length
+                # !I means Unsigned int, big endian
+                msglen = struct.unpack('!I', raw_msglen)[0]
+                
+                # get message
+                token = recvall(conn, msglen)
+                if token is None:
+                     print("Incomplete message received. Something went wrong.")
+                     client_disconnect_event.set()
+                     break
                 message = server_fernet.decrypt(token).decode()
                 print(f"Message from {client_id}: {message}")
             except (TimeoutError, socket.timeout):
@@ -299,9 +334,9 @@ if __name__ == "__main__":
         HOST = sys.argv[1]
         PORT = int(sys.argv[2])
     else:
-        #set to default values
-        HOST = "127.0.0.1"
-        PORT = 65432
+        print("USAGE: server.py [HOST] [PORT]")
+        print("Where HOST is the IP address the server should listen on, and PORT is the port number.")
+        sys.exit(1)
 
     #create locks
     #global acquisition order for locks to avoid deadlocks:
@@ -319,7 +354,7 @@ if __name__ == "__main__":
     active_client_ids = [] #client ID is simply the address tuple (ip, port), should be unique hopefully
 
     #create and start the server management interface thread
-    new_management_thread = threading.Thread(target=server_management_interface)
+    new_management_thread = threading.Thread(target=server_management_interface, daemon=True)
     with worker_threads_lock:
         worker_threads.append(new_management_thread)
         worker_threads[0].start()
@@ -342,8 +377,12 @@ if __name__ == "__main__":
         server_shutdown_event.set()
     finally:
         with worker_threads_lock:
-            #close all the threads
             for t in worker_threads:
-                t.join()
+                #this code is so 😭
+                #if a thread is reading input, it will be blocked, so it cant be joined
+                # so we have to check if it's a daemon. Specifically server_management_interface is a daemon
+                # server_management_interface is a daemon so it might be blocked
+                if not t.daemon:
+                    t.join()
     
     print("Server shutdown complete.")
